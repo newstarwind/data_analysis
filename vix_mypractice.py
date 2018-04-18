@@ -15,7 +15,7 @@ print '''
 # EX 明确体现了其作用, EX可以用于:
     * 发现期权价格;
     * 用于预测VIX可能下降或者回升;
-# 使用VIX计算SPY upper, 可以用来sell covered call
+# 使用VIX计算SPY upper, 可以用来sell covered call
 
 ===========================================================
 price data 从yahoo得到，最早到1993年
