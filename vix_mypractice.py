@@ -37,9 +37,9 @@ df = pd.read_csv('data' + os.sep + 'VIX_Study.csv',
 df['SPY returns'] = df['SPY Close'].pct_change()           # 当天收盘价变化
 df['VIX returns'] = df['VIX'].pct_change()                 # 当天收盘价变化
 df['fwd returns'] = df['SPY Open'].pct_change().shift(-2)  # 第三天开盘价 / 第二天开盘价 - 1
-df['hist vol'] = df['SPY returns'].rolling(
+df['hist vol']    = df['SPY returns'].rolling(
     21).std() * np.sqrt(252) * 100  # 前21天年化波动率
-df['fwd vol'] = df['SPY returns'].rolling(
+df['fwd vol']     = df['SPY returns'].rolling(
     21).std().shift(-21) * np.sqrt(252) * 100  # 后21天年化波动率
 
 volatilities = df[['VIX', 'hist vol', 'fwd vol']].dropna()
@@ -147,7 +147,7 @@ VIX表示未来的年化波动率, 如果基于自然分布(这是不对的):
 '''
 # %%
 
-std_num = 1
+std_num = 1.0
 df['proj upper'] = df['SPY Close'].shift(  # Get upper SPY price based on VIX
     21) * (1 + std_num * df['VIX'].shift(21) / 100 * np.sqrt(21) / np.sqrt(252))
 df['proj lower'] = df['SPY Close'].shift(  # Get lower SPY price based on VIX
@@ -157,6 +157,11 @@ df.loc['2008', ['SPY Close', 'proj upper', 'proj lower']].plot(
 # %%
 df.loc['2017', ['SPY Close', 'proj upper', 'proj lower']].plot(
     style=['b-', 'g:', 'r:'], figsize=figsize)
+
+# %%
+# df.loc[df['SPY Close'] > df['proj upper'], 'VIX'].hist(bins=30)
+print len(df.loc[df['SPY Close'] > df['proj upper'], 'SPY Close']) / float(len(df))
+df.loc[df['SPY Close'] > df['proj upper'], 'VIX'].describe()
 
 # %%
 print '''
