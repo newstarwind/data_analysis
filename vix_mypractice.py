@@ -37,9 +37,9 @@ df = pd.read_csv('data' + os.sep + 'VIX_Study.csv',
 df['SPY returns'] = df['SPY Close'].pct_change()           # 当天收盘价变化
 df['VIX returns'] = df['VIX'].pct_change()                 # 当天收盘价变化
 df['fwd returns'] = df['SPY Open'].pct_change().shift(-2)  # 第三天开盘价 / 第二天开盘价 - 1
-df['hist vol']    = df['SPY returns'].rolling(
+df['hist vol'] = df['SPY returns'].rolling(
     21).std() * np.sqrt(252) * 100  # 前21天年化波动率
-df['fwd vol']     = df['SPY returns'].rolling(
+df['fwd vol'] = df['SPY returns'].rolling(
     21).std().shift(-21) * np.sqrt(252) * 100  # 后21天年化波动率
 
 volatilities = df[['VIX', 'hist vol', 'fwd vol']].dropna()
@@ -160,7 +160,8 @@ df.loc['2017', ['SPY Close', 'proj upper', 'proj lower']].plot(
 
 # %%
 # df.loc[df['SPY Close'] > df['proj upper'], 'VIX'].hist(bins=30)
-print len(df.loc[df['SPY Close'] > df['proj upper'], 'SPY Close']) / float(len(df))
+print len(df.loc[df['SPY Close'] > df['proj upper'],
+                 'SPY Close']) / float(len(df))
 df.loc[df['SPY Close'] > df['proj upper'], 'VIX'].describe()
 
 # %%
@@ -224,3 +225,99 @@ eq = (1 + df.loc[df['vs expected'] < -0.5, 'fwd returns']).cumprod()  # 策略�
 eq.plot()  # equality curve
 (1 + df['fwd returns']).cumprod().plot()  # 实际大盘
 plt.show()
+
+# %%
+
+
+def sharpe_ratio(returns):
+    return returns.mean()/returns.std()
+
+
+def drawdown(eq):
+    return eq / eq.cummax() - 1
+
+
+def summary_stats(returns):
+    stats = pd.Series()
+    gains = returns[returns > 0]
+    losses = returns[returns <= 0]
+    num_total = len(returns)
+    num_gains = len(gains)
+    num_losses = len(losses)
+    avg = np.mean(returns)
+    volatility = np.std(returns)
+    sharpe = avg / volatility
+    win_pct = num_gains / num_total
+    avg_win = np.mean(gains)
+    avg_loss = np.mean(losses)
+    stats['total returns'] = num_total
+    stats['total gains'] = num_gains
+    stats['total losses'] = num_losses
+    stats['expectency (%)'] = avg * 100
+    stats['volatility (%)'] = volatility * 100
+    stats['sharpe (daily)'] = sharpe
+    stats['win % '] = win_pct * 100
+    stats['total returns'] = num_total
+    stats['average gain (%)'] = avg_win * 100
+    stats['average loss (%)'] = avg_loss * 100
+    return stats
+
+
+print (sharpe_ratio(df['fwd returns']) * np.sqrt(252))
+print (sharpe_ratio(df.loc[df['vs expected']
+                           < -0.5, 'fwd returns']) * np.sqrt(252))
+
+# %%
+over_40 = df.loc[df['VIX'] > 40]
+df['2008']['SPY Close'].plot()
+df['2008'].loc[over_40.index, 'SPY Close'].plot(style='ro')
+df['SPY Close'].rolling(200).mean().loc['2008'].plot()
+
+# %%
+over_40.loc[over_40['fwd returns'] <= 0, 'fwd returns'].describe()
+
+# %% =======================
+import statsmodels.api as sm
+X = df.dropna()['hist vol']
+X = sm.add_constant(X)
+y = df.dropna()['VIX']
+model = sm.OLS(y, X).fit()
+model.params
+
+# %%
+model.summary()
+# %%
+historical_component = df['hist vol'] * model.params[1] + model.params[0]
+plt.scatter(df['hist vol'], df['VIX'])
+plt.plot(df['hist vol'], historical_component, color='r')
+
+# %%
+resid = df['VIX'] - historical_component
+resid.plot()
+# %%
+
+
+def normalize(x):
+    return (x - np.mean(x)) / np.std(x)
+
+
+def bound(x):
+    return (x - np.min(x)) / (np.max(x) - np.min(x))
+
+
+normalized = normalize(resid)
+bounded = bound(normalized)
+bounded = (bounded * 2 - 1)
+bounded['2017'].plot(figsize=figsize)
+plt.title('Scaled Residuals: EX')
+
+# %%
+df['fwd returns'].groupby(pd.qcut(bounded, 10)).mean().plot(kind='bar')
+# %%
+expanding_quantile = bounded.expanding(min_periods=10).quantile(0.9)
+top_quantile = bounded > expanding_quantile
+filtered = df.loc[top_quantile, 'fwd returns']
+(1+filtered).cumprod().plot()
+(1 + df['SPY Close'].pct_change()).cumprod().plot()
+
+# %%

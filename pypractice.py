@@ -14,5 +14,5 @@ plt.show()
 # %%
 df = DataFrame(
     {'V': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]})
-df['Q'] = df.expanding(4).quantile(0.9)
+df['Q'] = df.expanding(5).quantile(0.9)
 df
