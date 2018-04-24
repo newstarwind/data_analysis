@@ -58,13 +58,13 @@ print '''
 * 如果这个价差为负的，表示市场的风险比预期的更大。
 '''
 # %%
+plt.figure(figsize=figsize)
 vix_fwd = volatilities['VIX'] - \
     volatilities['fwd vol']  # implied vol - real vol
 vix_fwd.hist(bins=100)
 plt.title('Implied Volatility - Realized Volatility')
 plt.xlabel('% Difference')
 plt.ylabel('Occurences')
-plt.show()
 
 # %%
 print '''
@@ -141,13 +141,16 @@ VIX表示未来的年化波动率, 如果基于自然分布(这是不对的):
 我们看一看在2008年和2017年这两个极端年份的情况.
 
 # 未来价格边界边界的计算可以预测21天后的SPY价格上下边界。 
-# 对于 upper 来说，1个标准差已经非常安全的Sell coverd Call.
-# 历史上如果SPY的价格高于1个标准差预测的价格，其实表明回调在即！
+# 对于 upper 来说，1.25 倍已经非常安全的Sell coverd Call.
+* sell 1.25 upper, 近10年只有2.74%的失败率
+* sell 1.75 upper, 近10年只有0.4%的失败率
 
+# 对于 lower 来说, 2.5 倍才是可以考虑的边界, 但是仍然不应该这样做, 性价比不高.
+* sell 2.5 lower, 2.5 的失败率是0.22%, 但是其每一次价差较大, 无法反脆弱.
 '''
 # %%
 
-std_num = 1.0
+std_num = 2.5
 df['proj upper'] = df['SPY Close'].shift(  # Get upper SPY price based on VIX
     21) * (1 + std_num * df['VIX'].shift(21) / 100 * np.sqrt(21) / np.sqrt(252))
 df['proj lower'] = df['SPY Close'].shift(  # Get lower SPY price based on VIX
@@ -155,8 +158,21 @@ df['proj lower'] = df['SPY Close'].shift(  # Get lower SPY price based on VIX
 df.loc['2008', ['SPY Close', 'proj upper', 'proj lower']].plot(
     style=['b-', 'g:', 'r:'], figsize=figsize)
 # %%
-df.loc['2017', ['SPY Close', 'proj upper', 'proj lower']].plot(
+df.loc['2008', ['SPY Close', 'proj upper', 'proj lower']].plot(
     style=['b-', 'g:', 'r:'], figsize=figsize)
+# %%
+# plt.figure(figsize=(12,8))
+since2000 = df
+# beyond =  since2000.loc[since2000['proj upper'] < since2000['SPY Close'],'SPY Close']
+below = since2000.loc[since2000['proj lower']
+                      > since2000['SPY Close'], 'SPY Close']
+total = since2000['SPY Close'].count()
+# print '%s percent' % str(round(100 * beyond.count() / (float(total)),2))
+print '%s percent' % str(round(100 * below.count() / (float(total)), 2))
+# since2000['SPY Close'].plot()
+# beyond.plot(style='ro')
+# below.plot(style='go')
+# since2000.loc[since2000['proj upper'] < since2000['SPY Close'],'SPY Close'].plot(style='ro')
 
 # %%
 # df.loc[df['SPY Close'] > df['proj upper'], 'VIX'].hist(bins=30)
