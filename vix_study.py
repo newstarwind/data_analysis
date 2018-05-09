@@ -95,6 +95,7 @@ df.dropna()['SPY Close'].plot()
 df.dropna().loc[worst_days, 'SPY Close'].plot(style='ro')  # 注意这种过滤绘图方法
 plt.show()
 
+
 # %%
 print '''
 # Excess VIX
