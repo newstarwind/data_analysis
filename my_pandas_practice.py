@@ -9,7 +9,16 @@ df = DataFrame({'key1':['a','a','b','b','a'],
                 'key2':['one','two','one','two','one'],
                 'data1':np.random.randn(5),
                 'data2':np.random.randn(5)})
-
+#%%
+#DF的各种属性
+print df.values
+print df.columns
+print df.shape
+print df.index
+print df.dtypes
+print df.head(2)
+print df.tail(2)
+#%%
 # 各种切片和定位方式
 print df
 print df['key1']
@@ -47,5 +56,29 @@ df.sort_index(by='k1')
 # print df.cumprod(axis = 0) #计算累积积
 # print df.diff(axPis=0)#当前行-上一行
 print df.pct_change(axis =0)
+#%%
+df = DataFrame(data = np.arange(8).reshape(4,2), columns=['a','b'])
+df2 = df.set_index('b') #设置b列为index
+print df2
+df2 = df.reset_index()  #将index列恢复成正常列
+print df2
+
+#%%
+df = pd.DataFrame(np.random.randn(6,4),columns=list('ABCD'))
+print df
+print df[df.A > 1] # 以列的值进行过滤
+print df[df.D < 0]
+
+#%%
+# 遍历所有行
+for row in df.iterrows() :
+    print row
+# 遍历所有行,并包含index的值，一行作为一个tuple返回
+for row in df.itertuples():
+    print row
+
+# 遍历所有列
+for column in df.columns:
+    print df[column]
 
 #%%
