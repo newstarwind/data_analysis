@@ -36,29 +36,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pandas_datareader import data
-
+plt.style.use(['seaborn'])
 # %%
 # download stock price data into DataFrame
 spy = 'SPY'
 
-stock = data.DataReader(spy, 'yahoo', start='1/28/2018')
-
-
+stock = data.DataReader(spy, 'yahoo', start='1/1/2000')
 stock['last_close'] = stock['Close'].shift(1)
 stock['change_before_market'] = (stock['Open'] - stock['last_close'])
 stock['change_in_market'] = (stock['Close'] - stock['Open'])
-stock = stock.dropna()
-
-print stock.change_before_market.sum()
-print stock.change_in_market.sum()
-
-
-# %%
-stock = data.DataReader(spy, 'yahoo', start='1/1/2000', end='4/6/2018')
-stock['last_close'] = stock['Close'].shift(1)
-stock['change_before_market'] = (
-    stock['Open'] - stock['last_close']) / stock['last_close']
-stock['change_in_market'] = (stock['Close'] - stock['Open']) / stock['Open']
 stock = stock.dropna()
 
 print stock.change_before_market.sum()
@@ -76,10 +62,13 @@ stock['cumsum_before_market'] = stock['change_before_market'].cumsum()
 stock['cumsum_in_market'] = stock['change_in_market'].cumsum()
 plt.plot(stock['cumsum_before_market'])
 plt.plot(stock['cumsum_in_market'])
-plt.hlines(y=0.0, xmin='2000', xmax='2019')
+plt.hlines(y=0.0, xmin='1999', xmax='2019')
 plt.legend()
 plt.show()
 
 # %%
 plt.plot(stock.Close)
 plt.show()
+
+
+#%%

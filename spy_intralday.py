@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import talib
 from scipy import stats
 import os
-figsize = (12, 10)
+figsize = (10, 8)
 # %% Prepare all data
 df = pd.read_csv('data' + os.sep + 'spy.csv', parse_dates=True,
                  index_col=0).dropna().sort_index(ascending=True).round(2)
@@ -31,8 +31,6 @@ print '''
 我们先看一看cornor RSI
 正在思考如何进行矢量运算来实现
 '''
-
-
 # %%
 def rsi(prices, window):
     rsi = talib.RSI(prices, window)
@@ -76,30 +74,64 @@ def connor_rsi(prices, rsi_window = 3, steak_window = 2, rank_window = 100 ):
 print connor_rsi(spy.price)
 
 # %%
-data = spy['price'].copy().values
-rsi_window      = 3
-steak_window    = 2
-rank_window     = 100
+def steak_rsi(df, name, window):
+    '''
+    voctor based calculation of Steak RSI
+    '''    
+    temp = pd.DataFrame(index= df.index, columns=['pct_change', 
+                                                   'duration', 
+                                                   'steak', 
+                                                   'steak_rsi'])
+    temp['pct_change'] = pd.Series(df[name]).pct_change()
+    temp['pct_change'] = temp['pct_change'].fillna(0)
+    temp.loc[temp['pct_change']>0,  'duration'] =  1.0
+    temp.loc[temp['pct_change']<0,  'duration'] = -1.0
+    temp.loc[temp['pct_change']==0, 'duration'] =  0.0
+    result = pd.DataFrame(index = temp.index, columns = ['steak', 'steak_rsi'])
+    for i, (index, row) in enumerate(temp.iterrows()):
+        current = row['duration']
+        last    = temp.iloc[i-1]['duration']
+        result_last = result.iloc[i-1]['steak']
+        if current == 0:
+            result.iloc[i]['steak'] = 0.0
+        elif current > 0:
+            if last <= 0:
+                result.iloc[i]['steak'] = 1.0
+            elif last > 0:
+                result.iloc[i]['steak'] = result_last + 1.0
+        elif current < 0:
+            if last >= 0:
+                result.iloc[i]['steak'] = -1.0
+            elif last < 0:
+                result.iloc[i]['steak'] = result_last -1.0
 
-R_rsi   = []
-R_steak = []
-R_rank  = []
-for i in range(len(data)):
-    if i >= rsi_window:
-        R_rsi.append(rsi(data[0:i+1], rsi_window)[-1])
-    else:
-        R_rsi.append(np.nan)
+    temp['steak'] = [ float(x) for x in result['steak']]
+    temp['steak_rsi'] = talib.RSI(temp['steak'].values,window)
+    return temp['steak_rsi']
+        
+print steak_rsi(spy, 'price', 2)
 
-    if i >= steak_window:
-        R_steak.append(rsi(np.array(duration(data[0:i+1])),steak_window)[-1])
-    else:
-        R_steak.append(np.nan)    
+# %%
+def rank(df, name, window):
+    data = pd.Series(prices).pct_change()
+    current = data.values[-1]
+    return 100 * sum(data < current)/float(len(prices.values))
 
-print R_rsi
-print R_steak
+def rank(df, name, window):
+    temp = pd.DataFrame(index= df.index, columns=['pct_change', 
+                                                   'rank'])
+    temp['pct_change'] = df[name].pct_change()
+    temp['rank'] = sum(df[name].rolling(window) < df[name].rolling(1).sum()) / float(window)                                               
+    return 100 * temp['rank']
 
-# print spy.head(10)
-# print spy.tail(10)
+name = 'price'
+window = 100
+temp = pd.DataFrame(index= df.index, columns=['pct_change', 'rank'])
+temp['pct_change'] = df[name].pct_change()
+# print df[name].rolling(window) < df[name].rolling(1).sum()
+print df[name].rolling(window) 
+
+# print rank(spy,'price',100)
 
 # %%
 print '''
