@@ -1,3 +1,4 @@
+# %%
 
 # coding=utf-8
 '''
@@ -62,6 +63,7 @@ stock['cumsum_before_market'] = stock['change_before_market'].cumsum()
 stock['cumsum_in_market'] = stock['change_in_market'].cumsum()
 plt.plot(stock['cumsum_before_market'])
 plt.plot(stock['cumsum_in_market'])
+plt.plot(stock['Close']-150)
 plt.hlines(y=0.0, xmin='1999', xmax='2019')
 plt.legend()
 plt.show()
