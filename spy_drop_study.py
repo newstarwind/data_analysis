@@ -56,14 +56,14 @@ print stock.change_in_market.sum()
 这里表现出一个惊人的事实:从2000年到现在, 盘中实际上仅仅涨了10%, 而另外90%都是盘前涨的.
 这说明两个道理:
 1, long的仓位一定不能离开市场, 要过夜;
-2, SDS仓位不能过夜,开盘进,尾盘出;
+2, 做空的仓位不能过夜,开盘进,尾盘出; 不过还是不要建议做空，获利机会不大。
 '''
 plt.figure(figsize=(8, 5))
 stock['cumsum_before_market'] = stock['change_before_market'].cumsum()
 stock['cumsum_in_market'] = stock['change_in_market'].cumsum()
 plt.plot(stock['cumsum_before_market'])
 plt.plot(stock['cumsum_in_market'])
-plt.plot(stock['Close']-150)
+plt.plot(stock['Close']-stock['Close'][0])
 plt.hlines(y=0.0, xmin='1999', xmax='2019')
 plt.legend()
 plt.show()

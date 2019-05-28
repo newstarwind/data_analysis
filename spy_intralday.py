@@ -10,6 +10,7 @@ import talib
 from scipy import stats
 import os
 figsize = (10, 8)
+plt.style.use(['seaborn'])
 # %% Prepare all data
 df = pd.read_csv('data' + os.sep + 'spy.csv', parse_dates=True,
                  index_col=0).dropna().sort_index(ascending=True).round(2)
@@ -135,8 +136,7 @@ print df[name].rolling(window)
 
 # %%
 print '''
-我们考察一下如果以Rolling Zscore作为入场条件，是否合适？
-先设置window = 21
+我们考察一下如果以Rolling Zscore作为入场条件，是否合适？ 先设置window = 21
 '''
 
 # %%
@@ -176,3 +176,6 @@ plt.show()
 # %%
 plt.figure(figsize=figsize)
 spy['fwd returns'].groupby(pd.qcut(spy['zscore'], 10)).mean().plot(kind='bar')
+
+
+#%%
